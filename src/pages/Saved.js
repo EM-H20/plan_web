@@ -102,7 +102,7 @@ function LocationCard({ item, showDelete, onDelete, onFavorite }) {
         <h3 className="card__title">{item.name || item.titleEng}
           <span className="card__loc">/{item.location}</span>
         </h3>
-        {item.titleKor && <h4 className="card__kor">{item.titleKor}</h4>}
+        {/* {item.titleKor && <h4 className="card__kor">{item.titleKor}</h4>} */}
         <p className="card__addr">{item.address}</p>
         {item.description && (
           <p className="card__description">{item.description}</p>
