@@ -1,0 +1,43 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 1rem 2rem;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header__logo {
+  width: auto;
+  height: 3rem;
+}
+
+.header__nav {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.header__list {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+}
+
+.header__item {
+}
+
+.header__link {
+  font-weight: 600;
+  color: #333;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.header__link:hover {
+  color: #66AAFF;
+}
+
+.header__link--active {
+  color: #3366ff;
+}

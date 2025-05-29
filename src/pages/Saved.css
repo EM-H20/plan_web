@@ -1,0 +1,292 @@
+.saved {
+  padding: 4rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: sans-serif;
+}
+
+/* Hero */
+.saved__hero {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.saved__hero h1 {
+  font-size: 2rem;
+  color: #111;
+  margin-bottom: 0.5rem;
+}
+.saved__hero p {
+  color: #555;
+  font-size: 1rem;
+}
+
+/* Controls */
+.saved__controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+.tabs {
+  background: #f0f4ff;
+  border-radius: 8px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: #f0f4ff;
+  display: flex;
+  overflow: hidden;
+}
+.tab {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #666;
+  transition: background 0.2s, color 0.2s;
+  
+}
+.tab:hover {
+  background: rgba(51, 102, 255, 0.1);
+}
+.tab--active {
+  background: #fff;
+  color: #3366ff;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.search input {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  min-width: 200px;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+}
+.grid__card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+}
+.card__img-wrapper {
+  position: relative;
+}
+.card__img-wrapper img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+}
+.badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #3366ff;
+  color: #fff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+.heart {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 1.25rem;
+  color: #fff;
+  text-shadow: 0 0 4px rgba(0,0,0,0.5);
+  cursor: pointer;
+}
+
+/* Card Body */
+.card__body {
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.card__title {
+  font-size: 1.1rem;
+  margin: 0;
+  color: #222;
+}
+.card__loc {
+  font-size: 0.9rem;
+  color: #777;
+  margin-left: 0.25rem;
+}
+.card__kor {
+  font-size: 1rem;
+  color: #333;
+  margin: 0.25rem 0;
+}
+.card__addr {
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+.card__description {
+  font-size: 0.85rem;
+  color: #333;
+  margin: 0.5rem 0 1rem;
+  line-height: 1.4;
+  font-style: italic;
+  border-left: 3px solid #3498db;
+  padding-left: 10px;
+  background-color: #f8f9fa;
+  padding: 8px 12px;
+  border-radius: 0 4px 4px 0;
+}
+.card__meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+/* Browse More */
+.saved__more {
+  text-align: center;
+  margin-top: 2rem;
+}
+.saved__more button {
+  background: #3366ff;
+  color: #fff;
+  border: none;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.saved__more button:hover {
+  background: #254bb5;
+}
+
+/* 저장된 위치 스타일 */
+.saved-location-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.saved-location-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.location-marker {
+  background: linear-gradient(135deg, #3366ff, #5c85ff);
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.location-marker-icon {
+  font-size: 3rem;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.delete-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  color: #ff3366;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.delete-btn:hover {
+  background-color: #fff;
+  transform: scale(1.1);
+}
+
+.location-coords {
+  margin-top: 10px;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.location-coords span {
+  background-color: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.view-on-map-btn {
+  margin-top: auto;
+  background-color: #3366ff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.view-on-map-btn:hover {
+  background-color: #254bb5;
+}
+
+.no-saved-locations {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  color: #666;
+}
+
+.no-saved-locations p:first-child {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+/* Map 페이지에 추가한 안내 텍스트 스타일 */
+.map-guide {
+  background-color: #f5f8ff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.guide-text {
+  margin: 8px 0;
+  color: #555;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.guide-text strong {
+  color: #3366ff;
+  font-weight: bold;
+}
