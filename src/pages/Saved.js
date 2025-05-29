@@ -109,6 +109,7 @@ function LocationCard({ item, showDelete, onDelete, onFavorite }) {
         )}
         <div className="card__meta">
           <span>🏷️ Type: {item.type}</span>
+          
           <span>⏱️ Stay Time: {item.stay}</span>
         </div>
         {item.lat !== undefined && item.lng !== undefined && (

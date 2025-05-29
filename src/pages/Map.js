@@ -3,13 +3,14 @@ import './Map.css';
 import defaultImage from '../assets/dafault-place.png'; // 새로 추가된 기본 이미지 사용
 
 // InfoWindow 생성 및 오픈을 담당하는 함수 (컴포넌트 내부에서 사용)
-function openInfoWindow({ map, marker, lat, lng, address }) {
+async function openInfoWindow({ map, marker, lat, lng, address }) {
+  const place = await getPlaceNameFromCoords(lat, lng);
   const infoWindow = new window.naver.maps.InfoWindow({
     content: `
       <div style="padding: 10px; min-width: 200px;">
         <p>위도: ${lat.toFixed(6)}</p>
         <p>경도: ${lng.toFixed(6)}</p>
-        <p>주소: ${address}</p>
+        <p>장소: ${(place || address)}</p>
       </div>
     `,
     borderColor: '#ccc',
@@ -17,6 +18,80 @@ function openInfoWindow({ map, marker, lat, lng, address }) {
     anchorSize: new window.naver.maps.Size(10, 10)
   });
   infoWindow.open(map, marker);
+}
+
+const searchNaverPlace = async (query) => {
+  try {
+    const response = await fetch(`http://localhost:5001/api/search?query=${encodeURIComponent(query)}`);
+    const data = await response.json();
+    console.log(data); // 리턴받은 장소
+    return data;
+  } catch(err) {
+    return null;
+  }
+};
+
+// 클릭한 지역 장소명 검색
+const getPlaceNameFromCoords = async (lat, lng) => {
+  try {
+    const response = await fetch(`http://localhost:5001/api/poi?lat=${lat}&lng=${lng}`);
+    const data = await response.json();
+    if (data.documents && data.documents.length > 0) {
+      const nearest = getNearestPlace(lat, lng, data.documents);
+      return nearest.place_name;
+    } else {
+      return null;
+    }
+  } catch (err) {
+    console.error('장소 이름 가져오기 실패:', err);
+    return null;
+  }
+};
+
+// 가장 가까운 장소 뽑아내기
+const getNearestPlace = (lat, lng, items) => {
+  if (!items || items.length === 0) return null;
+  return items.sort((a, b) => a.distance - b.distance)[0]; // 가장 가까운 1개
+};
+
+async function showRouteBetweenPoints({ startLat, startLng, endLat, endLng, map }) {
+  const routeData = await fetchNaverRoute(startLat, startLng, endLat, endLng);
+  if (routeData) {
+    drawRouteOnMap(map, routeData);
+  }
+}
+
+let currentRoutePolyline = null;
+
+function drawRouteOnMap(map, pathData) {
+  if (!pathData?.route?.traoptimal?.[0]?.path) {
+    console.log('경로 데이터가 올바르지 않습니다.');
+    return;
+  }
+
+  const rawPath = pathData.route.traoptimal[0].path;
+  const convertedPath = rawPath.map(([lng, lat]) => new window.naver.maps.LatLng(lat, lng));
+
+  currentRoutePolyline = new window.naver.maps.Polyline({
+    map: map,
+    path: convertedPath,
+    strokeColor: '#007BFF',
+    strokeWeight: 5
+  });
+}
+
+async function fetchNaverRoute(startLat, startLng, endLat, endLng) {
+  const start = `${startLng},${startLat}`;  // 경로는 "lng,lat" 순서
+  const goal = `${endLng},${endLat}`;
+
+  try {
+    const response = await fetch(`http://localhost:5001/api/route?start=${start}&goal=${goal}`);
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    console.error('경로 API 호출 실패:', err);
+    return null;
+  }
 }
 
 // 중복 제거: 기존 마커 제거
@@ -41,6 +116,10 @@ function updateMarkerInfo(setMarkerInfo, lat, lng, address) {
   setMarkerInfo({ lat, lng, address });
 }
 
+function getAddress(address) {
+  return address.roadAddress || address.jibunAddress;
+}
+
 function Map() {
   // 상태 관리
   const [markerInfo, setMarkerInfo] = useState(null);
@@ -59,64 +138,56 @@ function Map() {
   const markerRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // 장소명 또는 주소로 검색
-  const searchLocationByQuery = () => {
+  // 장소명으로 검색
+  const searchLocationByQuery = async () => {
     if (!searchQuery.trim() || !mapRef.current) return;
 
-    // 지오코딩 서비스를 사용하여 장소를 검색
-    window.naver.maps.Service.geocode({
-      query: searchQuery
-    }, (status, response) => {
-      if (status !== window.naver.maps.Service.Status.OK) {
-        alert('검색 결과가 없습니다. 다른 이름을 입력해주세요.');
+    try {
+      // 장소 검색
+      const data = await searchNaverPlace(searchQuery.trim());
+
+      if (!data || data.length === 0) {
+        alert('검색 결과가 없습니다.');
         return;
       }
+      console.log(data[0]);
 
-      // 검색 결과가 없는 경우
-      if (response.v2.meta.totalCount === 0) {
-        alert('검색 결과가 없습니다. 다른 이름을 입력해주세요.');
-        return;
-      }
+      const place = data[0];
+      const lat = place.lat
+      const lng = place.lng
+      const position = new window.naver.maps.LatLng(lat, lng);
 
+      setPlaceName(place.name);
 
-
-      // 처음 검색된 장소 정보 가져오기
-      const firstItem = response.v2.addresses[0];
-      const position = new window.naver.maps.LatLng(firstItem.y, firstItem.x);
-      
-      // 이름과 주소를 자동으로 입력
-      if (!placeName.trim()) {
-        const nameFromSearch = searchQuery.split(' ')[0]; // 처음 단어를 이름으로 사용
-        setPlaceName(nameFromSearch);
-      }
-      
-      // 주소 표시 및 마커 정보 업데이트
-      const fullAddress = firstItem.roadAddress || firstItem.jibunAddress;
-      setCustomAddress(fullAddress);
-      setOriginalAddress(fullAddress); // 원본 주소 저장
+      const finalAddress = place.address
+      setCustomAddress(finalAddress);
+      setOriginalAddress(finalAddress);
 
       // 지도 이동
       mapRef.current.setCenter(position);
-      
-      // 기존 마커 제거 (함수로 분리)
+
+      // 기존 마커 제거
       removeCurrentMarker(markerRef);
 
-      // 새 마커 생성 및 등록 (함수로 분리)
+      // 새 마커 생성 및 등록
       const marker = createAndRegisterMarker(position, mapRef, markerRef);
 
-      // 정보창 표시 (함수로 분리)
-      openInfoWindow({
+      // 정보창 표시
+      await openInfoWindow({
         map: mapRef.current,
         marker,
-        lat: position.lat(),
-        lng: position.lng(),
-        address: firstItem.roadAddress || firstItem.jibunAddress
+        lat: lat,
+        lng: lng,
+        address: searchQuery.trim()
       });
 
-      // 마커 정보 업데이트 (함수로 분리)
-      updateMarkerInfo(setMarkerInfo, position.lat(), position.lng(), fullAddress);
+      // 마커 정보 업데이트
+      updateMarkerInfo(setMarkerInfo, lat, lng, searchQuery.trim());
       setShowInput(true);
-    });
+    } catch (error) {
+      console.error('장소 검색 실패:', error);
+      alert('장소 검색 중 문제가 발생했습니다.');
+    }
   };
 
   // 주소로 마커 위치 업데이트
@@ -126,7 +197,7 @@ function Map() {
     // 지오코딩 서비스를 사용하여 주소를 좌표로 변환
     window.naver.maps.Service.geocode({
       query: customAddress
-    }, (status, response) => {
+    }, async (status, response) => {
       if (status !== window.naver.maps.Service.Status.OK) {
         alert('입력하신 주소를 찾을 수 없습니다. 다른 주소를 입력해주세요.');
         return;
@@ -151,17 +222,19 @@ function Map() {
       // 새 마커 생성 및 등록 (함수로 분리)
       const marker = createAndRegisterMarker(position, mapRef, markerRef);
 
+      const fullAddress = getAddress(firstItem)
+
       // 정보창 표시 (함수로 분리)
-      openInfoWindow({
+      await openInfoWindow({
         map: mapRef.current,
         marker,
         lat: position.lat(),
         lng: position.lng(),
-        address: firstItem.roadAddress || firstItem.jibunAddress
+        address: fullAddress
       });
 
       // 마커 정보 상태 업데이트 (함수로 분리)
-      updateMarkerInfo(setMarkerInfo, position.lat(), position.lng(), firstItem.roadAddress || firstItem.jibunAddress);
+      updateMarkerInfo(setMarkerInfo, position.lat(), position.lng(), fullAddress);
       
       // 이미 주소가 입력되어 있으니 customAddress는 업데이트하지 않음
     });
@@ -328,17 +401,19 @@ function Map() {
         return;
       }
       
-      // 2. 기본 위치 설정 (서울시청)
-      const defaultPosition = new window.naver.maps.LatLng(37.5666805, 126.9784147);
+      // 2. 기본 위치 설정 (세종대)
+      const defaultPosition = new window.naver.maps.LatLng(37.549186395087, 127.07505567644);
       
       // 3. 지도 옵션 설정
       const mapOptions = {
         center: defaultPosition,
-        zoom: 14,
+        zoom: 17,
         zoomControl: true,
         zoomControlOptions: {
           position: window.naver.maps.Position.TOP_RIGHT
-        }
+        },
+        mapTypeId: window.naver.maps.MapTypeId.NORMAL,
+        mapTypeControl: true,
       };
       
       // 4. 지도 객체 생성
@@ -377,35 +452,34 @@ function Map() {
         // 클릭한 위치 좌표
         const clickedPosition = e.coord;
         
+        const beforemarker = markerRef.current;
+        
         // 기존 마커 제거
-        if (markerRef.current) {
-          markerRef.current.setMap(null);
-        }
+        removeCurrentMarker(markerRef)
         
         // 새 마커 생성
+        // const marker = createAndRegisterMarker(clickedPosition, map, markerRef)
         const marker = new window.naver.maps.Marker({
           position: clickedPosition,
           map: map
         });
-        
         markerRef.current = marker;
         
         // 클릭 위치의 주소 정보 가져오기 (Reverse Geocoding)
         window.naver.maps.Service.reverseGeocode({
           coords: clickedPosition,
           orders: [window.naver.maps.Service.OrderType.ADDR, window.naver.maps.Service.OrderType.ROAD_ADDR].join(',')
-        }, function(status, response) {
+        }, async function(status, response) {
           if (status !== window.naver.maps.Service.Status.OK) {
             console.error('주소 정보를 가져오는데 실패했습니다');
             return;
           }
           
           // 주소 정보 추출
-          const result = response.v2;
-          const address = result.address.roadAddress || result.address.jibunAddress;
+          const address = getAddress(response.v2.address);
           
           // 정보창 표시 (함수로 분리)
-          openInfoWindow({
+          await openInfoWindow({
             map,
             marker,
             lat: clickedPosition.lat(),
@@ -419,6 +493,21 @@ function Map() {
             lng: clickedPosition.lng(),
             address: address
           };
+          
+          // 두 지점 사이에 경로가 잘 그려지는지 임시로 작성한 코드
+          // if(beforemarker != null) {
+          //   const beforeLat = beforemarker.getPosition().lat();
+          //   const beforeLng = beforemarker.getPosition().lng();
+            
+          //   if(currentRoutePolyline) currentRoutePolyline.setMap(null);
+          //   showRouteBetweenPoints({
+          //     startLat: beforeLat,
+          //     startLng: beforeLng,
+          //     endLat: clickedPosition.lat(),
+          //     endLng: clickedPosition.lng(),
+          //     map: map
+          //   });
+          // }
           
           setMarkerInfo(markerData);
           setCustomAddress(address); // 초기 주소를 사용자 입력용 상태에 설정
