@@ -3,6 +3,10 @@ node_modules/
 .cache/
 build/
 dist/
+coverage/
+tmp/
+temp/
+*.tmp
 
 # 환경설정 및 로그 파일 무시
 .env
@@ -24,6 +28,10 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw*
+
+# 테스트 관련
+jest-html-reporters-*.html
+test-results.xml
 
 # 테스트 커버리지
 coverage/
